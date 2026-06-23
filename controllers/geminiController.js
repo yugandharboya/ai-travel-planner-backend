@@ -7,7 +7,7 @@ const ai = new GoogleGenAI({
 const generateTravelPlan = async (req, res) => {
   try {
     const { destination, durationDays, budgetTier, interests } = req.body;
-    console.log("Received request body:", req.body);
+
     const prompt = `
 Create a detailed travel plan in JSON format only.
 
@@ -80,10 +80,22 @@ Rules:
 
     return res.status(200).json(tripPlan);
   } catch (error) {
-    console.error("Gemini Error:", error);
-    return res.status(500).json({
-      message: "Error generating trip plan",
-    });
+    try {
+      const parsedErrorObject = JSON.parse(error.message);
+
+      console.log("Gemini Error:", parsedErrorObject.error.message);
+
+      return res.status(500).json({
+        message:
+          parsedErrorObject.error.message || "Error generating trip plan",
+      });
+    } catch (parseError) {
+      console.log("Gemini Error:", error.message);
+
+      return res.status(500).json({
+        message: error.message || "Error generating trip plan",
+      });
+    }
   }
 };
 
